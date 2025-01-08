@@ -14,9 +14,6 @@ load_dotenv()
 
 logfire.configure()
 
-class MemeResponse(BaseModel):
-    url: str
-
 def escape_text(text: str) -> str:
     """Escape text for use in a URL"""
     replacements = [
@@ -39,18 +36,7 @@ def escape_text(text: str) -> str:
         text = text.replace(old, new)
     return text
 
-agent = Agent(
-    "openai:gpt-4o-mini",
-    result_type=MemeResponse,
-    system_prompt="""You are a meme generator.
-Analyze conversations and create appropriate memes.
-Create memes that are funny and/or sarcastic, either summarizing the conversation or making a joke about it.
-Choose the most appropriate template for the context.
-Always use a tool.""",
-)
-
-@agent.tool_plain
-def drake(top: str, bottom: str) -> MemeResponse:
+class DrakeMeme(BaseModel):
     """
     Create a Drake meme
 
@@ -60,10 +46,13 @@ def drake(top: str, bottom: str) -> MemeResponse:
       Top: Manually writing prompts
       Bottom: Using structured templates
     """
-    return MemeResponse(url=f"https://api.memegen.link/images/drake/{escape_text(top)}/{escape_text(bottom)}.png")
+    top: str
+    bottom: str
 
-@agent.tool_plain
-def db(distracted_by: str, subject: str, distracted_from: str) -> MemeResponse:
+    def __str__(self):
+        return f"https://api.memegen.link/images/drake/{escape_text(self.top)}/{escape_text(self.bottom)}.png"
+
+class DistractedBoyfriendMeme(BaseModel):
     """
     Create a Distracted Boyfriend meme
 
@@ -74,10 +63,14 @@ def db(distracted_by: str, subject: str, distracted_from: str) -> MemeResponse:
       subject: Me
       distracted_from: My unfinished projects
     """
-    return MemeResponse(url=f"https://api.memegen.link/images/db/{escape_text(distracted_by)}/{escape_text(subject)}/{escape_text(distracted_from)}.png")
+    distracted_by: str
+    subject: str
+    distracted_from: str
 
-@agent.tool_plain
-def yuno(top: str, bottom: str) -> MemeResponse:
+    def __str__(self):
+        return f"https://api.memegen.link/images/db/{escape_text(self.distracted_by)}/{escape_text(self.subject)}/{escape_text(self.distracted_from)}.png"
+
+class YUNOMeme(BaseModel):
     """
     Create a Y U NO meme
 
@@ -87,10 +80,13 @@ def yuno(top: str, bottom: str) -> MemeResponse:
       Top: Y U NO
       Bottom: use this meme!?
     """
-    return MemeResponse(url=f"https://api.memegen.link/images/yuno/{escape_text(top)}/{escape_text(bottom)}.png")
+    top: str
+    bottom: str
 
-@agent.tool_plain
-def spiderman(top: str, bottom: str) -> MemeResponse:
+    def __str__(self):
+        return f"https://api.memegen.link/images/yuno/{escape_text(self.top)}/{escape_text(self.bottom)}.png"
+
+class SpidermanMeme(BaseModel):
     """
     Create a Spider-Man Pointing meme
 
@@ -100,10 +96,13 @@ def spiderman(top: str, bottom: str) -> MemeResponse:
       Top: Frontend Developer
       Bottom: Backend Developer
     """
-    return MemeResponse(url=f"https://api.memegen.link/images/spiderman/{escape_text(top)}/{escape_text(bottom)}.png")
+    top: str
+    bottom: str
 
-@agent.tool_plain
-def sadfrog(top: str, bottom: str) -> MemeResponse:
+    def __str__(self):
+        return f"https://api.memegen.link/images/spiderman/{escape_text(self.top)}/{escape_text(self.bottom)}.png"
+
+class SadFrogMeme(BaseModel):
     """
     Create a Feels Bad Man meme
 
@@ -113,10 +112,13 @@ def sadfrog(top: str, bottom: str) -> MemeResponse:
       Top: lost my keys
       Bottom: feels bad man
     """
-    return MemeResponse(url=f"https://api.memegen.link/images/sadfrog/{escape_text(top)}/{escape_text(bottom)}.png")
+    top: str
+    bottom: str
 
-@agent.tool_plain
-def jd(top: str, bottom: str) -> MemeResponse:
+    def __str__(self):
+        return f"https://api.memegen.link/images/sadfrog/{escape_text(self.top)}/{escape_text(self.bottom)}.png"
+
+class JosephDucreuxMeme(BaseModel):
     """
     Create a Joseph Ducreux meme
 
@@ -126,10 +128,13 @@ def jd(top: str, bottom: str) -> MemeResponse:
       Top: Disregard Females
       Bottom: Acquire Currency
     """
-    return MemeResponse(url=f"https://api.memegen.link/images/jd/{escape_text(top)}/{escape_text(bottom)}.png")
+    top: str
+    bottom: str
 
-@agent.tool_plain
-def slap(top: str, bottom: str) -> MemeResponse:
+    def __str__(self):
+        return f"https://api.memegen.link/images/jd/{escape_text(self.top)}/{escape_text(self.bottom)}.png"
+
+class SlapMeme(BaseModel):
     """
     Create a Slap meme
 
@@ -139,7 +144,24 @@ def slap(top: str, bottom: str) -> MemeResponse:
       Top: Me trying to enjoy the weekend
       Bottom: Monday
     """
-    return MemeResponse(url=f"https://api.memegen.link/images/slap/{escape_text(top)}/{escape_text(bottom)}.png")
+    top: str
+    bottom: str
+
+    def __str__(self):
+        return f"https://api.memegen.link/images/slap/{escape_text(self.top)}/{escape_text(self.bottom)}.png"
+
+
+agent = Agent(
+    "openai:gpt-4o-mini",
+    result_type=DrakeMeme | DistractedBoyfriendMeme | YUNOMeme | SpidermanMeme | SadFrogMeme | JosephDucreuxMeme | SlapMeme, # type: ignore
+    system_prompt="""You are a meme generator.
+Analyze conversations and create appropriate memes.
+Create memes that are funny and/or sarcastic, either summarizing the conversation or making a joke about it.
+Choose the most appropriate template for the context.
+Return a meme model directly.""",
+    end_strategy="exhaustive",
+)
+
 
 async def generate_meme_url(conversation: str) -> str:
     """Generate a meme URL based on conversation context"""
@@ -147,7 +169,7 @@ async def generate_meme_url(conversation: str) -> str:
     # Try up to 3 times
     for _ in range(3):
         result = await agent.run(f"Create a meme for this conversation:\n{conversation}")
-        if "api.memegen.link" in result.data.url:
-            return result.data.url
+        if result:
+            return str(result.data)
 
     return "https://api.memegen.link/images/sadfrog/meme--bot/failed_again.png"
