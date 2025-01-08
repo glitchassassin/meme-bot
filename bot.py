@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 
 import discord
@@ -51,11 +52,15 @@ async def on_message(message: discord.Message):
             # Get recent conversation context
             context = await bot.get_recent_messages(message.channel)
 
-            # Generate meme URL using AI
-            meme_url = await generate_meme_url(context)
+            try:
+                # Generate meme URL using AI
+                meme_url = await generate_meme_url(context)
+                # Send the meme
+                await message.channel.send(meme_url)
+            except Exception as e:
+                logging.error(f"Error generating meme: {e}")
+                await message.channel.send("I'm broken. Please send help!")
 
-            # Send the meme
-            await message.channel.send(meme_url)
 
     await bot.process_commands(message)
 
