@@ -14,85 +14,13 @@ from typing_extensions import Annotated
 
 load_dotenv()
 
-
-class MemeTemplate(BaseModel):
-    """Metadata about a meme template"""
-    id: str
-    name: str
-    description: str
-    example: str
-
-TemplateID = Literal["drake", "db", "yuno", "spiderman", "sadfrog", "jd", "slap"]
-
-TEMPLATES: dict[TemplateID, MemeTemplate] = {
-    "drake": MemeTemplate(
-        id="drake",
-        name="Drake Hotline Bling",
-        description="For comparing two things, where the first is rejected and second is preferred",
-        example="Top: Manually writing prompts\nBottom: Using structured templates"
-    ),
-    "db": MemeTemplate(
-        id="db",
-        name="Distracted Boyfriend",
-        description="For showing preference of one thing over another, especially when it's ironic",
-        example="Top: Me looking at new frameworks\nBottom: My unfinished projects"
-    ),
-    "yuno": MemeTemplate(
-        id="yuno",
-        name="Y U NO",
-        description="For expressing frustration with someone for not doing something",
-        example="Top: Y U NO\nBottom: use this meme!?"
-    ),
-    "spiderman": MemeTemplate(
-        id="spiderman",
-        name="Spider-Man Pointing",
-        description="To highlight blame, similarity, irony, or confusion between identical or overlapping roles or entities, often humorously.",
-        example="Top: Frontend Developer\nBottom: Backend Developer"
-    ),
-    "sadfrog": MemeTemplate(
-        id="sadfrog",
-        name="Feels Bad Man",
-        description="For expressing sadness or depression",
-        example="Top: lost my keys\nBottom: feels bad man"
-    ),
-    "jd": MemeTemplate(
-        id="jd",
-        name="Joseph Ducreux",
-        description="For giving commands. Use archaic/Shakespearean language for humor.",
-        example="Top: Disregard Females\nBottom: Acquire Currency"
-    ),
-    "slap": MemeTemplate(
-        id="slap",
-        name="Slap",
-        description="For something that is interrupted suddenly and unpleasantly",
-        example="Top: Me trying to enjoy the weekend\nBottom: Monday"
-    ),
-}
-
 class MemeResponse(BaseModel):
-    """Structure for meme generation responses"""
-
-    template: TemplateID = Field(description="The meme template to use")
-    top_text: Annotated[str, Field(max_length=100)] = Field(
-        description="Top text for the meme"
-    )
-    bottom_text: Annotated[str, Field(max_length=100)] = Field(
-        description="Bottom text for the meme"
-    )
+    url: str
 
 def build_system_prompt() -> str:
     """Build the system prompt from template metadata"""
-    template_descriptions = "\n".join(
-        f"- {t.name} ('{t.id}'): {t.description}\n  Example: {t.example}"
-        for t in TEMPLATES.values()
-    )
     
-    return f"""You are a meme generator. Analyze conversations and create appropriate memes.
-
-Available templates:
-{template_descriptions}
-
-Create memes that are funny and/or sarcastic, either summarizing the conversation or making a joke about it. Choose the most appropriate template for the context."""
+    return """You are a meme generator. Analyze conversations and create appropriate memes. Create memes that are funny and/or sarcastic, either summarizing the conversation or making a joke about it. Choose the most appropriate template for the context."""
 
 agent = Agent(
     "openai:gpt-4o-mini",
@@ -100,13 +28,122 @@ agent = Agent(
     system_prompt=build_system_prompt(),
 )
 
+def escape_text(text: str) -> str:
+    """Escape text for use in a URL"""
+    replacements = [
+        ('_', '__'),    # Must come first to avoid double-replacing
+        ('-', '--'),    # Must come first to avoid double-replacing
+        (' ', '_'),     # Spaces to underscores
+        ('?', '~q'),
+        ('&', '~a'),
+        ('%', '~p'),
+        ('#', '~h'),
+        ('/', '~s'),
+        ('\\', '~b'),
+        ('<', '~l'),
+        ('>', '~g'),
+        ('"', "''"),
+        ('\n', '~n')
+    ]
+    
+    for old, new in replacements:
+        text = text.replace(old, new)
+    return text
+
+@agent.tool_plain
+def drake(top: str, bottom: str) -> MemeResponse:
+    """
+    Create a Drake meme
+
+    For comparing two things, where the first is rejected and second is preferred
+    
+    Example:
+      Top: Manually writing prompts
+      Bottom: Using structured templates
+    """
+    return MemeResponse(url=f"https://api.memegen.link/images/drake/{escape_text(top)}/{escape_text(bottom)}.png")
+
+@agent.tool_plain
+def db(distracted_by: str, subject: str, distracted_from: str) -> MemeResponse:
+    """
+    Create a Distracted Boyfriend meme
+
+    For showing preference of one thing over another, especially when it's ironic
+    
+    Example:
+      distracted_by: New frameworks
+      subject: Me
+      distracted_from: My unfinished projects
+    """
+    return MemeResponse(url=f"https://api.memegen.link/images/db/{escape_text(distracted_by)}/{escape_text(subject)}/{escape_text(distracted_from)}.png")
+
+@agent.tool_plain
+def yuno(top: str, bottom: str) -> MemeResponse:
+    """
+    Create a Y U NO meme
+
+    For expressing frustration with someone for not doing something
+    
+    Example:
+      Top: Y U NO
+      Bottom: use this meme!?
+    """
+    return MemeResponse(url=f"https://api.memegen.link/images/yuno/{escape_text(top)}/{escape_text(bottom)}.png")
+
+@agent.tool_plain
+def spiderman(top: str, bottom: str) -> MemeResponse:
+    """
+    Create a Spider-Man Pointing meme
+
+    To highlight blame, similarity, irony, or confusion between identical or overlapping roles
+    
+    Example:
+      Top: Frontend Developer
+      Bottom: Backend Developer
+    """
+    return MemeResponse(url=f"https://api.memegen.link/images/spiderman/{escape_text(top)}/{escape_text(bottom)}.png")
+
+@agent.tool_plain
+def sadfrog(top: str, bottom: str) -> MemeResponse:
+    """
+    Create a Feels Bad Man meme
+
+    For expressing sadness or depression
+    
+    Example:
+      Top: lost my keys
+      Bottom: feels bad man
+    """
+    return MemeResponse(url=f"https://api.memegen.link/images/sadfrog/{escape_text(top)}/{escape_text(bottom)}.png")
+
+@agent.tool_plain
+def jd(top: str, bottom: str) -> MemeResponse:
+    """
+    Create a Joseph Ducreux meme
+
+    For giving commands. Use archaic/Shakespearean language for humor.
+    
+    Example:
+      Top: Disregard Females
+      Bottom: Acquire Currency
+    """
+    return MemeResponse(url=f"https://api.memegen.link/images/jd/{escape_text(top)}/{escape_text(bottom)}.png")
+
+@agent.tool_plain
+def slap(top: str, bottom: str) -> MemeResponse:
+    """
+    Create a Slap meme
+
+    For something that is interrupted suddenly and unpleasantly
+    
+    Example:
+      Top: Me trying to enjoy the weekend
+      Bottom: Monday
+    """
+    return MemeResponse(url=f"https://api.memegen.link/images/slap/{escape_text(top)}/{escape_text(bottom)}.png")
+
 async def generate_meme_url(conversation: str) -> str:
     """Generate a meme URL based on conversation context"""
     result = await agent.run(f"Create a meme for this conversation:\n{conversation}")
 
-    # Convert to URL format
-    template = result.data.template
-    top = result.data.top_text.replace(" ", "_")
-    bottom = result.data.bottom_text.replace(" ", "_")
-
-    return f"https://api.memegen.link/images/{template}/{top}/{bottom}.png"
+    return result.data.url
