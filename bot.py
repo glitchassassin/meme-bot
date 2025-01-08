@@ -21,14 +21,23 @@ class MemeBot(commands.Bot):
         super().__init__(command_prefix="!", intents=intents)
 
     async def get_recent_messages(
-        self, channel: discord.TextChannel, limit: int = 5
+        self, message: discord.Message, limit: int = 5
     ) -> str:
         """Get recent message context as a single string"""
         messages = []
-        async for msg in channel.history(limit=limit):
-            # Skip bot messages and the trigger message
-            if not msg.author.bot:
-                messages.append(f"{msg.author.name}: {msg.content}")
+        
+        # Handle reply scenario
+        if message.reference and isinstance(message.reference.resolved, discord.Message):
+            messages.extend([
+                f"{message.reference.resolved.author.name}: {message.reference.resolved.content}",
+                f"{message.author.name}: {message.content}"
+            ])
+        else:
+            # Get recent messages if not a reply
+            async for msg in message.channel.history(limit=limit):
+                if not msg.author.bot:
+                    messages.append(f"{msg.author.name}: {msg.content}")
+        
         return "\n".join(reversed(messages))
 
 
@@ -46,11 +55,10 @@ async def on_message(message: discord.Message):
     if message.author == bot.user:
         return
 
-    # Check if bot was mentioned with "meme this"
     if bot.user in message.mentions and isinstance(message.channel, discord.TextChannel):
         async with message.channel.typing():
             # Get recent conversation context
-            context = await bot.get_recent_messages(message.channel)
+            context = await bot.get_recent_messages(message)
 
             try:
                 # Generate meme URL using AI
