@@ -1,6 +1,7 @@
 FROM ghcr.io/astral-sh/uv:python3.10-alpine
 
 WORKDIR /app
+ENV PYTHONUNBUFFERED=1
 
 # Copy application code
 COPY . .

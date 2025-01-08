@@ -11,7 +11,7 @@ from meme_maker import generate_meme_url
 
 load_dotenv()
 
-
+logging.basicConfig(level=logging.INFO)
 
 class MemeBot(commands.Bot):
     def __init__(self):
@@ -27,7 +27,7 @@ class MemeBot(commands.Bot):
         messages = []
         async for msg in channel.history(limit=limit):
             # Skip bot messages and the trigger message
-            if not msg.author.bot and not msg.content.strip().lower() == "meme this":
+            if not msg.author.bot:
                 messages.append(f"{msg.author.name}: {msg.content}")
         return "\n".join(reversed(messages))
 
