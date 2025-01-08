@@ -5,28 +5,17 @@ and generate content based on a recent conversation.
 
 from __future__ import annotations
 
-from typing import Literal
-
+import logfire
 from dotenv import load_dotenv
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from pydantic_ai import Agent
-from typing_extensions import Annotated
 
 load_dotenv()
 
+logfire.configure()
+
 class MemeResponse(BaseModel):
     url: str
-
-def build_system_prompt() -> str:
-    """Build the system prompt from template metadata"""
-    
-    return """You are a meme generator. Analyze conversations and create appropriate memes. Create memes that are funny and/or sarcastic, either summarizing the conversation or making a joke about it. Choose the most appropriate template for the context."""
-
-agent = Agent(
-    "openai:gpt-4o-mini",
-    result_type=MemeResponse,
-    system_prompt=build_system_prompt(),
-)
 
 def escape_text(text: str) -> str:
     """Escape text for use in a URL"""
@@ -49,6 +38,16 @@ def escape_text(text: str) -> str:
     for old, new in replacements:
         text = text.replace(old, new)
     return text
+
+agent = Agent(
+    "openai:gpt-4o-mini",
+    result_type=MemeResponse,
+    system_prompt="""You are a meme generator.
+Analyze conversations and create appropriate memes.
+Create memes that are funny and/or sarcastic, either summarizing the conversation or making a joke about it.
+Choose the most appropriate template for the context.
+Always use a tool.""",
+)
 
 @agent.tool_plain
 def drake(top: str, bottom: str) -> MemeResponse:
@@ -144,6 +143,11 @@ def slap(top: str, bottom: str) -> MemeResponse:
 
 async def generate_meme_url(conversation: str) -> str:
     """Generate a meme URL based on conversation context"""
-    result = await agent.run(f"Create a meme for this conversation:\n{conversation}")
 
-    return result.data.url
+    # Try up to 3 times
+    for _ in range(3):
+        result = await agent.run(f"Create a meme for this conversation:\n{conversation}")
+        if "api.memegen.link" in result.data.url:
+            return result.data.url
+
+    return "https://api.memegen.link/images/sadfrog/meme--bot/failed_again.png"
