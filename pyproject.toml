@@ -3,9 +3,9 @@ name = "meme-bot"
 version = "0.1.0"
 description = "A discord bot that generates memes based on conversation context"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 dependencies = [
-    "discord-py[voice]>=2.4.0",
+    "discord-py>=2.4.0",
     "logfire>=3.0.0",
     "pydantic>=2.10.4",
     "pydantic-ai>=0.0.18",
