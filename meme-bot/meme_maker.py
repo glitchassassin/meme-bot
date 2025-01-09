@@ -150,10 +150,90 @@ class SlapMeme(BaseModel):
     def __str__(self):
         return f"https://api.memegen.link/images/slap/{escape_text(self.top)}/{escape_text(self.bottom)}.png"
 
+class AncientAliensGuyMeme(BaseModel):
+    """
+    Create an Ancient Aliens Guy meme
+
+    Use this for a ridiculous or far-fetched explanation of something
+    
+    Example:
+      Top: The pyramids?
+      Bottom: Aliens
+    """
+    top: str
+    bottom: str
+
+    def __str__(self):
+        return f"https://api.memegen.link/images/aag/{escape_text(self.top)}/{escape_text(self.bottom)}.png"
+    
+class AstronautMeme(BaseModel):
+    """
+    Create an Astronaut meme
+
+    This represents someone learning a forbidden or dangerous secret, just when it's too late
+    
+    Example:
+      Top: Wait, it's round?
+      Bottom: Always has been
+    """
+    top: str
+    bottom: str
+
+    def __str__(self):
+        return f"https://api.memegen.link/images/astronaut/{escape_text(self.top)}/{escape_text(self.bottom)}.png"
+
+class AwesomeMeme(BaseModel):
+    """
+    Create a Socially Awesome Penguin meme
+
+    Use this for something that is over-the-top awesome
+    
+    Example:
+      Top: say a word wrong
+      Bottom: create hilarious inside joke
+    """
+    top: str
+    bottom: str
+
+    def __str__(self):
+        return f"https://api.memegen.link/images/awesome/{escape_text(self.top)}/{escape_text(self.bottom)}.png"
+
+class AwesomeAwkwardMeme(BaseModel):
+    """
+    Create a Socially Awesome Awkward Penguin meme
+
+    Use this for something that starts out awesome but ends up awkward
+    
+    Example:
+      Top: first day at new job
+      Bottom: spill coffee on bossman
+    """
+    top: str
+    bottom: str
+
+    def __str__(self):
+        return f"https://api.memegen.link/images/awesome-awkward/{escape_text(self.top)}/{escape_text(self.bottom)}.png"
+    
+class AwkwardMeme(BaseModel):
+    """
+    Create a Socially Awkward Penguin meme
+
+    Use this for something that is over-the-top awkward
+    
+    Example:
+      Top: start telling joke
+      Bottom: forget punchline
+    """
+    top: str
+    bottom: str
+
+    def __str__(self):
+        return f"https://api.memegen.link/images/awkward/{escape_text(self.top)}/{escape_text(self.bottom)}.png"
+
 
 agent = Agent(
     "openai:gpt-4o-mini",
-    result_type=DrakeMeme | DistractedBoyfriendMeme | YUNOMeme | SpidermanMeme | SadFrogMeme | JosephDucreuxMeme | SlapMeme, # type: ignore
+    result_type=DrakeMeme | DistractedBoyfriendMeme | YUNOMeme | SpidermanMeme | SadFrogMeme | JosephDucreuxMeme | SlapMeme | AncientAliensGuyMeme | AstronautMeme | AwesomeMeme | AwesomeAwkwardMeme | AwkwardMeme, # type: ignore
     system_prompt="""You are a meme generator.
 Analyze the message, consulting the conversation context if necessary, and create an appropriate meme.
 Create a meme that is funny and/or sarcastic.
