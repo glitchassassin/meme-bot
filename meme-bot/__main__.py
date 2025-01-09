@@ -34,11 +34,14 @@ class MemeBot(commands.Bot):
             ])
         else:
             # Get recent messages if not a reply
+            messages.append("Current message:")
+            messages.append(f"{message.author.name}: {message.content}")
+            messages.append("Conversation context:")
             async for msg in message.channel.history(limit=limit):
-                if not msg.author.bot:
+                if not msg.author.bot and not msg.id == message.id:
                     messages.append(f"{msg.author.name}: {msg.content}")
         
-        return "\n".join(reversed(messages))
+        return "\n".join(messages)
 
 
 bot = MemeBot()

@@ -1,4 +1,4 @@
-FROM ghcr.io/astral-sh/uv:python3.10-alpine
+FROM ghcr.io/astral-sh/uv:python3.13-alpine
 
 WORKDIR /app
 ENV PYTHONUNBUFFERED=1
@@ -10,4 +10,4 @@ COPY . .
 RUN uv sync --frozen
 
 # Run the bot
-CMD ["uv", "run", "bot.py"] 
+CMD ["uv", "run", "meme-bot"] 

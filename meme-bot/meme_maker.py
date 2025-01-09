@@ -60,15 +60,15 @@ class DistractedBoyfriendMeme(BaseModel):
     
     Example:
       distracted_by: New frameworks
-      subject: Me
+      actor: Me
       distracted_from: My unfinished projects
     """
     distracted_by: str
-    subject: str
+    actor: str
     distracted_from: str
 
     def __str__(self):
-        return f"https://api.memegen.link/images/db/{escape_text(self.distracted_by)}/{escape_text(self.subject)}/{escape_text(self.distracted_from)}.png"
+        return f"https://api.memegen.link/images/db/{escape_text(self.distracted_by)}/{escape_text(self.actor)}/{escape_text(self.distracted_from)}.png"
 
 class YUNOMeme(BaseModel):
     """
@@ -155,10 +155,9 @@ agent = Agent(
     "openai:gpt-4o-mini",
     result_type=DrakeMeme | DistractedBoyfriendMeme | YUNOMeme | SpidermanMeme | SadFrogMeme | JosephDucreuxMeme | SlapMeme, # type: ignore
     system_prompt="""You are a meme generator.
-Analyze conversations and create appropriate memes.
-Create memes that are funny and/or sarcastic, either summarizing the conversation or making a joke about it.
-Choose the most appropriate template for the context.
-Return a meme model directly.""",
+Analyze the message, consulting the conversation context if necessary, and create an appropriate meme.
+Create a meme that is funny and/or sarcastic.
+Choose the most appropriate template for the context.""",
     end_strategy="exhaustive",
 )
 
@@ -168,7 +167,7 @@ async def generate_meme_url(conversation: str) -> str:
 
     # Try up to 3 times
     for _ in range(3):
-        result = await agent.run(f"Create a meme for this conversation:\n{conversation}")
+        result = await agent.run(f"Create a meme for this request:\n{conversation}")
         if result:
             return str(result.data)
 
